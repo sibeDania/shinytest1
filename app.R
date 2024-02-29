@@ -4,7 +4,6 @@ library(tidyverse)
 library(bslib)
 library(bsicons)
 
-head(penguins)
 
 peng <- penguins
 
@@ -48,23 +47,18 @@ ui <- fluidPage(
             tabPanel("Min tab",
                      br(),
                      fluidRow(column(width = 3,
-                                     uiOutput("bl_vb")),
+                                     uiOutput("bill_length_vb")),
+                              
                               column(width = 3,
-                                     value_box(title = "Bill depth",
-                                               value = "50",
-                                               showcase = bs_icon("bank2"),
-                                               class = "bg-danger")),
+                                     uiOutput("bill_depth_vb")),
+
                               column(width = 3,
-                                     value_box(title = "Bill depth",
-                                               value = "50",
-                                               showcase = bs_icon("bank2"),
-                                               class = "bg-danger")),
+                                     uiOutput("flipper_length_vb")),
+                     
                               column(width = 3,
-                                     value_box(title = "Bill depth",
-                                               value = "50",
-                                               showcase = bs_icon("bank2"),
-                                               class = "bg-danger"))),
-                     plotOutput("peng_plot")),
+                                     uiOutput("body_mass_vb")),
+                              
+                     plotOutput("peng_plot"))),
             tabPanel("Min anden tab"))
         )
     )
@@ -86,19 +80,73 @@ server <- function(input, output) {
     
   })  
   
-
-# Value boxes -------------------------------------------------------------
-
-  output$bl_vb <- renderUI({
+  bill_depth <- reactive({
     
-    value_box(title = "Bill depth",
-              value = bill_length(),
-              showcase = bs_icon("bank2"),
-              class = "bg-danger")
+    bd <- peng %>% 
+      filter(species == input$sel_peng) %>% 
+      summarise(mean = round(mean(bill_depth_mm, na.rm = TRUE), digits = 1))
+    
+    return(bd$mean)
+    
+  })
+  
+  flipper_length <- reactive({
+    
+    fl <- peng %>% 
+      filter(species == input$sel_peng) %>% 
+      summarise(mean = round(mean(flipper_length_mm, na.rm = TRUE), digits = 1))
+    
+    return(fl$mean)
+    
+  })
+  
+  bill_depth <- reactive({
+    
+    bd <- peng %>% 
+      filter(species == input$sel_peng) %>% 
+      summarise(mean = round(mean(bill_depth_mm, na.rm = TRUE), digits = 1))
+    
+    return(bd$mean)
     
   })
 
+# Value boxes -------------------------------------------------------------
 
+  output$bill_length_vb <- renderUI({
+    
+    value_box(title = "Avg. Bill length",
+              value = bill_length(),
+              showcase = icon("ruler"),
+              class = "bs-danger")
+    
+  })
+  
+  output$bill_depth_vb <- renderUI({
+    
+    value_box(title = "Avg. Bill depth",
+              value = bill_depth(),
+              showcase = icon("magnifying-glass"),
+              class = "bg-danger")
+   
+  })
+  
+  output$flipper_length_vb <- renderUI({
+    
+    value_box(title = "Avg. Flipper Length",
+              value = flipper_length(),
+              showcase = bs_icon("3-circle-fill"),
+              class = "bg-danger")
+    
+  })
+  
+  output$body_mass_vb <- renderUI({
+    
+    value_box(title = "Avg. Body Mass",
+              value = body_mass(),
+              showcase = bs_icon("4-circle-fill"),
+              class = "bg-danger")
+    
+  })
 # Plots -------------------------------------------------------------------
 
     
