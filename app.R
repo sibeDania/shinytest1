@@ -1,6 +1,18 @@
 library(shiny)
+library(palmerpenguins)
+library(tidyverse)
+library(bslib)
+library(bsicons)
+
+head(penguins)
+
+peng <- penguins
 
 logo <- "https://eadania.com/media/3920/dania-academy-denmark-official-logo2.png"
+
+theme_set(theme_minimal())
+
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -23,18 +35,36 @@ ui <- fluidPage(
           hr(),
           br(),
           
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
+          radioButtons("sel_peng",
+                       "Select penguins",
+                       choices = c(unique(peng$species)))
+          
+            
         ),
 
         # Show a plot of the generated distribution
         mainPanel(
           tabsetPanel(
             tabPanel("Min tab",
-              plotOutput("distPlot")),
+                     br(),
+                     fluidRow(column(width = 3,
+                                     uiOutput("bl_vb")),
+                              column(width = 3,
+                                     value_box(title = "Bill depth",
+                                               value = "50",
+                                               showcase = bs_icon("bank2"),
+                                               class = "bg-danger")),
+                              column(width = 3,
+                                     value_box(title = "Bill depth",
+                                               value = "50",
+                                               showcase = bs_icon("bank2"),
+                                               class = "bg-danger")),
+                              column(width = 3,
+                                     value_box(title = "Bill depth",
+                                               value = "50",
+                                               showcase = bs_icon("bank2"),
+                                               class = "bg-danger"))),
+                     plotOutput("peng_plot")),
             tabPanel("Min anden tab"))
         )
     )
@@ -42,16 +72,47 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  
 
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
+# Calculation -------------------------------------------------------------
 
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
+  bill_length <- reactive({
+    
+    bl <- peng %>% 
+      filter(species == input$sel_peng) %>% 
+      summarise(mean = round(mean(bill_length_mm, na.rm = TRUE), digits = 1))
+    
+    return(bl$mean)
+    
+  })  
+  
+
+# Value boxes -------------------------------------------------------------
+
+  output$bl_vb <- renderUI({
+    
+    value_box(title = "Bill depth",
+              value = bill_length(),
+              showcase = bs_icon("bank2"),
+              class = "bg-danger")
+    
+  })
+
+
+# Plots -------------------------------------------------------------------
+
+    
+
+    output$peng_plot <- renderPlot({
+      
+      peng1 <- peng %>% 
+        filter(species == input$sel_peng)
+      
+      ggplot(peng1, aes(x = bill_length_mm,
+                       y = bill_depth_mm)) +
+        geom_point() +
+        labs(title = input$sel_peng)
+      
     })
 }
 
