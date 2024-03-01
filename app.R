@@ -8,11 +8,11 @@ head(penguins)
 
 peng <- penguins
 
-logo <- "https://eadania.com/media/3920/dania-academy-denmark-official-logo2.png"
+day <- readRDS("~/GitHub/shinytest1/model/day.Rds")
+
+#logo <- "https://eadania.com/media/3920/dania-academy-denmark-official-logo2.png"
 
 theme_set(theme_minimal())
-
-
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -28,16 +28,30 @@ ui <- fluidPage(
     sidebarLayout(
         sidebarPanel(
           
-          div(img(height = 65, width = 80, src = logo),
+          div(img(height = 65, width = 80, src = "dania.png"),
               style = "text-align: center;"),
           
           br(),
           hr(),
           br(),
           
+          numericInput("sel_day",
+                       "Select a number to return a day",
+                       min = "1",
+                       max = "7",
+                       value = "1"),
+          
           radioButtons("sel_peng",
                        "Select penguins",
-                       choices = c(unique(peng$species)))
+                       choices = c(unique(peng$species))),
+          
+          checkboxInput("sel_color",
+                        "Tick for colors between sexes"),
+          
+          selectInput("sel_island",
+                             "Select which island",
+                             choices = unique(peng$island),
+                             selected = head(peng$island))
           
             
         ),
@@ -52,13 +66,13 @@ ui <- fluidPage(
                               column(width = 3,
                                      value_box(title = "Bill depth",
                                                value = "50",
-                                               showcase = bs_icon("bank2"),
+                                               showcase = div(
+                                                 img(height = 60, width = 60,
+                                                     src = "sibe_no_bg.PNG")
+                                               ),
                                                class = "bg-danger")),
                               column(width = 3,
-                                     value_box(title = "Bill depth",
-                                               value = "50",
-                                               showcase = bs_icon("bank2"),
-                                               class = "bg-danger")),
+                                     uiOutput("day_vb")),
                               column(width = 3,
                                      value_box(title = "Bill depth",
                                                value = "50",
@@ -97,6 +111,17 @@ server <- function(input, output) {
               class = "bg-danger")
     
   })
+  
+  output$day_vb <- renderUI({
+    
+    weekday <- day(input$sel_day)
+    
+    value_box(title = "The chosen day is a:",
+              value = weekday,
+              showcase = bs_icon("bank2"),
+              class = "bg-danger")
+    
+  })
 
 
 # Plots -------------------------------------------------------------------
@@ -108,10 +133,28 @@ server <- function(input, output) {
       peng1 <- peng %>% 
         filter(species == input$sel_peng)
       
-      ggplot(peng1, aes(x = bill_length_mm,
-                       y = bill_depth_mm)) +
-        geom_point() +
-        labs(title = input$sel_peng)
+      if(input$sel_color) {
+      
+        ggplot(peng1, aes(x = bill_length_mm, y = bill_depth_mm)) +
+          geom_point(aes(color = peng1$sex)) +
+          labs(x = "Bill length",
+               y = "Bill depth",
+               title = "Plot",
+               subtitle = input$sel_peng) +
+          scale_color_manual(values = c("male" = "blue", "female" = "pink"),
+                             name = "Gender")
+        
+      }
+      
+      else {
+        
+        ggplot(peng1, aes(x = bill_length_mm,
+                          y = bill_depth_mm)) +
+          geom_point() +
+          labs(title = input$sel_peng)
+          
+        
+      }
       
     })
 }
