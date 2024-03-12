@@ -12,7 +12,7 @@ logo <- "https://eadania.com/media/3920/dania-academy-denmark-official-logo2.png
 
 theme_set(theme_minimal())
 
-
+"Dette er en test"
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
